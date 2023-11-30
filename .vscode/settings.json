@@ -1,0 +1,6 @@
+{
+    "accessibility.hideAccessibleView": false,
+    "rust-analyzer.linkedProjects": [
+        ".\\Cargo.toml"
+    ]
+}
