@@ -1,8 +1,12 @@
 // Window values
 pub const WINDOW_WIDTH: f32 = 640.0;
 pub const WINDOW_HEIGHT: f32 = 480.0;
-pub const WINDOW_X_BORDER: f32 = WINDOW_WIDTH * 0.5;
-pub const WINDOW_Y_BORDER: f32 = WINDOW_HEIGHT * 0.5;
+
+// Background layers
+pub const BACKGROUND_WIDTH: f32 = WINDOW_WIDTH / 4.0;
+pub const BACKGROUND_HEIGHT: f32 = WINDOW_HEIGHT / 4.0;
+pub const BACKGROUND_LAYER_1: &'static str = "textures\\background_layer1.png";
+pub const BACKGROUND_LAYER_2: &'static str = "textures\\background_layer2.png";
 
 // Sprite textures paths
 pub const SHIP_SPRITES: &'static str = "textures\\SpaceShooterAssetPack_Ships.png";
