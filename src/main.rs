@@ -1,6 +1,8 @@
-use bevy::window::WindowTheme;
+use bevy::window::{WindowMode, WindowTheme};
 use bevy::prelude::*;
+use bevy_parallax::ParallaxCameraComponent;
 
+use space_shooter::background::*;
 use space_shooter::components::*;
 use space_shooter::constants::*;
 use space_shooter::states::*;
@@ -10,7 +12,8 @@ use space_shooter::foe::*;
 
 fn setup(mut commands: Commands) {
     // Spawns 2d camera
-    commands.spawn(Camera2dBundle::default());    
+    commands.insert_resource(ClearColor(Color::BLACK));
+    commands.spawn(Camera2dBundle::default()).insert(ParallaxCameraComponent::default());    
 }
 
 fn setup_gameover(mut commands: Commands) {
@@ -59,7 +62,7 @@ struct SpaceShooterPlugin;
 impl Plugin for SpaceShooterPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<GameState>()
-            .add_plugins((PlayerPlugin, FoePlugin))
+            .add_plugins((BackgroundPlugin, PlayerPlugin, FoePlugin))
             .add_systems(Startup, setup)                        
             .add_systems(OnEnter(GameState::GameOver), setup_gameover)
             .add_systems(Update, check_to_reset.run_if(in_state(GameState::GameOver)))
@@ -75,10 +78,11 @@ fn main() {
                     title: "Space shooter".to_string(),
                     resolution: (WINDOW_WIDTH, WINDOW_HEIGHT).into(),
                     position: WindowPosition::Centered(MonitorSelection::Primary),
+                    mode: WindowMode::Windowed,
                     focused: true,
                     resizable: false,
                     visible: true,
-                    window_theme: Some(WindowTheme::Dark),
+                    window_theme: Some(WindowTheme::Dark),                    
                     ..default()
                 }),
                 ..default()
