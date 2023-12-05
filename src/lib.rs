@@ -1,3 +1,4 @@
+pub mod background;
 pub mod components;
 pub mod resources;
 pub mod constants;
