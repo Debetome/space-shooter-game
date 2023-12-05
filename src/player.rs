@@ -16,13 +16,23 @@ impl Plugin for PlayerPlugin {
                     ship_movement,
                     ship_shooting,
                     update_bullets,
-                    check_if_hit_by_bullet,                                      
-                    check_if_hit_by_foe,
+                    //check_if_hit_by_bullet,                                      
+                    //check_if_hit_by_foe,
                     update_pumper,
                     ship_swerving,
-                    pumper_animation                 
+                    pumper_animation,
+                    test_system                
                 ).run_if(in_state(GameState::Playing))
             );
+    }
+}
+
+fn test_system(
+    mut ship_query: Query<&mut Transform, With<SpaceShip>>,    
+    time: Res<Time>
+) {
+    if let Ok(mut transform) = ship_query.get_single_mut() {
+        transform.translation.y += 80.0 * time.delta_seconds();
     }
 }
 
@@ -62,7 +72,7 @@ fn setup_ship(
             texture_atlas: pumper_texture_atlas_handle,
             sprite: TextureAtlasSprite::new(15),
             transform: Transform {
-                translation: Vec3::new(0.0, -36.0, 0.0),
+                translation: Vec3::new(0.0, -36.0, 5.0),
                 scale: Vec3::new(6.0, 6.0, 0.0),
                 ..default()
             },
@@ -75,29 +85,33 @@ fn setup_ship(
 }
 
 fn ship_movement(
-    mut ship_query: Query<(&mut Transform, &Speed), With<SpaceShip>>,    
+    mut ship_query: Query<(&mut Transform, &Speed), With<SpaceShip>>,
+    camera_query: Query<(&Camera, &GlobalTransform)>,
     keyboard_input: Res<Input<KeyCode>>, 
     time: Res<Time>
 ) {
     if ship_query.is_empty() { return; }
 
-    let (mut ship_transform, speed) = ship_query.single_mut();    
+    let (mut ship_transform, speed) = ship_query.single_mut();
+    let (camera, camera_transform) = camera_query.single();
 
-    let current_x = ship_transform.translation.x;
-    let current_y = ship_transform.translation.y;
+    let Some(viewport_transform) = camera.world_to_viewport(camera_transform, ship_transform.translation) else { return };
+    
+    let current_x = viewport_transform.x;
+    let current_y = viewport_transform.y;
 
     let mut horizontal = 0.0;
     let mut vertical = 0.0;
 
-    if keyboard_input.pressed(KeyCode::Left) && !(current_x <= -WINDOW_X_BORDER) {
+    if keyboard_input.pressed(KeyCode::Left) && !(current_x < 0.0) {
         horizontal -= 1.0;
-    } else if keyboard_input.pressed(KeyCode::Right) && !(current_x >= WINDOW_X_BORDER) {
+    } else if keyboard_input.pressed(KeyCode::Right) && !(current_x >= WINDOW_WIDTH) {
         horizontal += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::Up) && !(current_y >= WINDOW_Y_BORDER) {
+    if keyboard_input.pressed(KeyCode::Up) && !(current_y < 0.0) {
         vertical += 1.0;
-    } else if keyboard_input.pressed(KeyCode::Down) && !(current_y <= -WINDOW_Y_BORDER) {
+    } else if keyboard_input.pressed(KeyCode::Down) && !(current_y >= WINDOW_HEIGHT) {
         vertical -= 1.0;
     }
 
@@ -188,14 +202,22 @@ fn ship_shooting(
 }
 
 fn update_bullets(
-    mut bullets_query: Query<(Entity, &mut Transform, &Speed), With<Bullet>>, 
     mut commands: Commands,
+    mut bullets_query: Query<(Entity, &mut Transform, &Speed), With<Bullet>>,     
+    camera_query: Query<(&Camera, &GlobalTransform)>,
     time: Res<Time>
 ) {
+    if camera_query.is_empty() { return }
+
+    let (camera, camera_transform) = camera_query.single();
+
     for (bullet_entity, mut transform, speed) in &mut bullets_query {
         transform.translation.y += speed.0 * time.delta_seconds();
-        if transform.translation.y > (WINDOW_HEIGHT * 0.5) {
-            commands.entity(bullet_entity).despawn();            
+
+        if let Some(bullet_transform) = camera.world_to_viewport(camera_transform, transform.translation) {
+            if bullet_transform.y > WINDOW_HEIGHT * 1.5 {
+                commands.entity(bullet_entity).despawn();            
+            }
         }        
     }
 }
